@@ -59,7 +59,7 @@ st.markdown("""
         height: 58px;          /* FORCE TALL KEYS */
         width: 100%;           /* FILL THE COLUMN */
         font-weight: bold;
-        font-size: 20px;
+        font-size: 30px;
         padding: 0;
         margin: 0;
         line-height: 58px;
