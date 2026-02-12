@@ -55,11 +55,11 @@ st.markdown("""
         background-color: #818384;
         color: white;
         border: none;
-        border-radius: 4px;
+        border-radius: 8px;
         height: 58px;          /* FORCE TALL KEYS */
         width: 100%;           /* FILL THE COLUMN */
         font-weight: bold;
-        font-size: 13px;
+        font-size: 20px;
         padding: 0;
         margin: 0;
         line-height: 58px;
