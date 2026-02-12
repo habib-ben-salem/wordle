@@ -34,7 +34,7 @@ st.markdown("""
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 50px;
+        font-size: 30px;
         font-weight: bold;
         text-transform: uppercase;
         font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -59,7 +59,7 @@ st.markdown("""
         height: 58px;          /* FORCE TALL KEYS */
         width: 100%;           /* FILL THE COLUMN */
         font-weight: bold;
-        font-size: 30px;
+        font-size: 50px;
         padding: 0;
         margin: 0;
         line-height: 58px;
