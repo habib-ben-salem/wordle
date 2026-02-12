@@ -34,7 +34,7 @@ st.markdown("""
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 30px;
+        font-size: 50px;
         font-weight: bold;
         text-transform: uppercase;
         font-family: 'Helvetica Neue', Arial, sans-serif;
