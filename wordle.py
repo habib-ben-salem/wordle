@@ -297,7 +297,17 @@ with tab2:
         st.markdown("---")
         
         # Display Current Word
-        st.metric(label="Current Target Word", value=global_state["current_word"])
+        if 'show_word' not in st.session_state: st.session_state.show_word = False
+        
+        col_metric, col_toggle = st.columns([3, 1])
+        with col_metric:
+            display_word = global_state["current_word"] if st.session_state.show_word else "*****"
+            st.metric(label="Current Target Word", value=display_word)
+        with col_toggle:
+            st.write("") # Spacer
+            if st.button("👁️ Toggle", key="toggle_word"):
+                st.session_state.show_word = not st.session_state.show_word
+                st.rerun()
         
         st.markdown("### Actions")
         c_p1, c_p2 = st.columns(2)
