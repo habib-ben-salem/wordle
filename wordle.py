@@ -113,7 +113,32 @@ st.markdown("""
         grid-template-columns: repeat(5, 1fr);
         gap: 5px;
     }
+    
+    /* 5. CENTERED NOTIFICATION OVERLAY */
+    .centered-notification {
+        position: fixed;
+        top: 15%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #333;
+        color: #fff;
+        padding: 15px 25px;
+        border-radius: 8px;
+        font-weight: bold;
+        z-index: 99999;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        border: 2px solid #555;
+        text-align: center;
+        animation: fadeOut 2.5s forwards;
+    }
+    
+    @keyframes fadeOut {
+        0% { opacity: 1; margin-top: 0px; }
+        70% { opacity: 1; margin-top: 0px; }
+        100% { opacity: 0; margin-top: -20px; visibility: hidden; }
+    }
     </style>
+
 """, unsafe_allow_html=True)
 
 # --- APP LOGIC ---
@@ -176,6 +201,14 @@ with tab1:
             grid_html += f'<div class="tile {status}">{char}</div>'
         grid_html += '</div>'
     grid_html += '</div></div>'
+    
+    # Show Notification if present
+    if 'notification' in st.session_state and st.session_state.notification:
+        st.markdown(f'<div class="centered-notification">{st.session_state.notification}</div>', unsafe_allow_html=True)
+        # Clear notification after one render (it will only be removed on next interaction, 
+        # but the CSS animation handles the visual disappearance)
+        st.session_state.notification = None
+
     st.markdown(grid_html, unsafe_allow_html=True)
 
     if st.session_state.game_over:
@@ -212,7 +245,9 @@ with tab1:
                     
                     st.rerun()
                 else:
-                    st.toast("Not in word list", icon="❌") # Better than st.error inside column
+                    # Show centered notification
+                    st.session_state.notification = "⛔ English Yazbi! Not in dictionary"
+                    st.rerun()
         elif key == "⌫":
             st.session_state.current_guess = st.session_state.current_guess[:-1]
             st.rerun()
@@ -242,6 +277,7 @@ with tab1:
     # Enter is 1.5x, Letters are 1x, Backspace is 1.5x
     c3 = st.columns([1.5] + [1]*7 + [1.5])
     
+
     if c3[0].button("ENTER", key="enter", use_container_width=True):
         press("ENTER")
         
@@ -253,10 +289,39 @@ with tab1:
         press("⌫")
 
 with tab2:
-    pwd = st.text_input("Admin Password", type="password")
+    st.header("🔒 Admin Controls")
+    pwd = st.text_input("Enter Admin Password", type="password")
+    
     if pwd == global_state["admin_password"]:
-        if st.button("🚀 New Word"):
-            global_state["current_word"] = random.choice(global_state["dictionary"]).upper()
-            st.session_state.guesses = []
-            st.rerun()
-        st.info(f"Current Word: {global_state['current_word']}")
+        st.success("✅ Access Granted")
+        st.markdown("---")
+        
+        # Display Current Word
+        st.metric(label="Current Target Word", value=global_state["current_word"])
+        
+        st.markdown("### Actions")
+        c_p1, c_p2 = st.columns(2)
+        
+        with c_p1:
+            if st.button("🎲 Shuffle Word", use_container_width=True):
+                global_state["current_word"] = random.choice(global_state["dictionary"]).upper()
+                st.session_state.guesses = []
+                st.session_state.game_over = False
+                st.session_state.game_result = None
+                st.toast(f"Word shuffled! New word is: {global_state['current_word']}")
+                st.rerun()
+                
+        with c_p2:
+            custom_word = st.text_input("Set Custom Word (5 Letters)", max_chars=5).upper()
+            if st.button("💾 Set Word", use_container_width=True):
+                if len(custom_word) == 5 and custom_word.isalpha():
+                    global_state["current_word"] = custom_word
+                    st.session_state.guesses = []
+                    st.session_state.game_over = False
+                    st.session_state.game_result = None
+                    st.toast(f"Word updated to: {custom_word}")
+                    st.rerun()
+                else:
+                    st.error("Word must be exactly 5 letters.")
+    elif pwd:
+        st.error("Incorrect Password")
