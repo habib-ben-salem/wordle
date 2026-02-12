@@ -1,0 +1,10 @@
+apple
+brave
+crane
+dance
+flame
+grape
+house
+slice
+stone
+train
