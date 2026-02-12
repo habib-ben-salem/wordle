@@ -55,7 +55,7 @@ st.markdown("""
         background-color: #818384;
         color: white;
         border: none;
-        border-radius: 8px;
+        border-radius: 10px;
         height: 58px;          /* FORCE TALL KEYS */
         width: 100%;           /* FILL THE COLUMN */
         font-weight: bold;
