@@ -65,6 +65,15 @@ st.markdown("""
         line-height: 58px;
     }
 
+    /* Disabled/Absent Key Styling */
+    div.stButton > button:disabled {
+        background-color: #3b3b3b !important;
+        color: #777 !important;
+        border: 1px solid #333 !important;
+        opacity: 1 !important;
+        cursor: not-allowed;
+    }
+
     /* Hover State */
     div.stButton > button:hover {
         background-color: #565758;
@@ -270,127 +279,34 @@ with tab1:
 
     # 3. RENDER KEYBOARD (Precise Columns)
     
-    # Helper to inject custom CSS class for specific buttons using JavaScript is hard in Streamlit
-    # proper way effectively requires iterating and checking state.
-    # Since we can't easily add classes to Streamlit buttons directly via Python, 
-    # we'll use a hacky style injection or just rely on global CSS targeting aria-labels if we could,
-    # but the simplest robust way in pure Streamlit usually involves recreating buttons or
-    # ignoring the visual update on the button itself. 
-    # HOWEVER, we can restart the loop and check if k in absent_letters.
-    
-    # Actually, standard Streamlit buttons don't support dynamic classes easily.
-    # We will inject a <style> block that targets the specific button indices if possible,
-    # OR we just change the label? No, key looks weird.
-    # BEST APPROACH FOR STREAMLIT: We can't easily add classes to specific buttons.
-    # We will try to use the `type` argument or `disabled` status? 
-    # No, `type` only has primary/secondary.
-    
-    # ALTERNATIVE: We can generate a specific <style> block that targets the buttons by their predictable aria-labels or inner text.
-    # Streamlit buttons usually have the text inside a <p> or just inside the button.
-    # Let's try to target them via the aria-label which usually matches the label.
-    
-    css_absent = "<style>"
-    for char in absent_letters:
-        # Target button by its content text. This is a bit fragile but works in many versions.
-        # We target div.stButton > button that contains the specific text.
-        # CSS :has() selector is modern but supported in Chrome.
-        # div.stButton > button:has(div p:contains('Q')) - no standard CSS contains.
-        
-        # We will use the 'key' attribute assumption or just rely on a simpler method:
-        # We can't change the button COLOR individually easily without Streamlit headers/components or serious CSS hacks.
-        # But we CAN update the global style block dynamically based on the set.
-        pass
-
-    # Actually, a known trick is to use the `key` property to target, but `key` is internal.
-    # Let's try a different approach: styling via an injected style block that targets `[data-testid="stBaseButton-secondary"]` 
-    # if we could toggle type, but we can't.
-    
-    # LET'S USE A RELIABLE HACK: aria-label extraction is reliable.
-    # Button text is usually in a <p> tag inside the button.
-    # We can perform a dynamic style injection that uses attributes.
-    # <button ... ><div ...><p>Q</p></div></button>
-    
-    # Since we cannot easily style specific native buttons, we acknowledge this limitation or try the best CSS match.
-    # We will inject a massive style block that iterates all letters.
-    
-    style_content = ""
-    for char in absent_letters:
-        # This targets the button that specifically has the text of the char
-        # Using aria-label is safer if streamlit sets it (it often does to the label).
-        style_content += f"""
-        div.stButton > button[data-testid="baseButton-secondary"] p:contains("{char}"), 
-        div.stButton > button p:contains("{char}") {{ 
-            /* This pseudo-selector doesn't exist in standard CSS, we need a parent selector */
-        }}
-        """ 
-    
-    # RE-EVALUATION: The user wants the keys to be darker.
-    # We will use the `disabled=True` state for absent keys?
-    # If we disable them, they look different (greyed out) which is what is requested ("darker").
-    # AND it prevents using them again, which might be okay or might be annoying.
-    # Wordle allows reusing wrong letters, just warns/shows them as dark.
-    # Enabling `disabled=True` is the easiest native way to "darken" them.
-    
+    # Row 1: Q-P (10 Keys)
     keys1 = "QWERTYUIOP"
     c1 = st.columns(10)
     for idx, k in enumerate(keys1):
         is_absent = k in absent_letters
-        # If we disable, we can't click it. But user might fat-finger or just want to try.
-        # Wordle allows clicking. 
-        # We will separate the button call.
-        if is_absent:
-             # We can't style individually easily. 
-             # We will use `type="primary"` for good keys and default for others? No.
-             pass
-        
-        # Since we can't style individually, we'll try the `help` tooltip or just accept we might need `disabled` to start.
-        # Wait, we can use `type="primary"` for PRESENT keys maybe? 
-        # But for ABSENT, we want darker.
-        
-        # Let's try the javascript hack to add classes.
-        # It's too complex for this agent without reliability.
-        
-        # FALLBACK: We will use a hack that many Streamlit Wordles use:
-        # We construct the button label with a visible indicator or we just accept `disabled=True` acts as the "Darker" visual.
-        
-        if c1[idx].button(k, key=f"btn_{k}", use_container_width=True):
+        if c1[idx].button(k, key=f"btn_{k}", use_container_width=True, disabled=is_absent):
             press(k)
 
-    # RE-ATTEMPTING CSS INJECTION FOR SPECIFIC KEYS
-    # We can inject a style block where we use:
-    # button[aria-label="Q"] { background-color: ... }
-    # Streamlit buttons usually have aria-label equal to their label.
-    
-    keyboard_css = "<style>"
-    for char in absent_letters:
-        keyboard_css += f"""
-        div.stButton > button[aria-label="{char}"] {{
-            background-color: #3b3b3b !important;
-            color: #777 !important;
-            border: 1px solid #333 !important;
-        }}
-        """
-    keyboard_css += "</style>"
-    st.markdown(keyboard_css, unsafe_allow_html=True)
-
-    # Row 2
+    # Row 2: A-L (9 Keys) - Centered with Spacers
     keys2 = "ASDFGHJKL"
     c2 = st.columns([0.5] + [1]*9 + [0.5]) 
     for idx, k in enumerate(keys2):
-        if c2[idx+1].button(k, key=f"btn_{k}", use_container_width=True):
+        if c2[idx+1].button(k, key=f"btn_{k}", use_container_width=True, disabled=k in absent_letters):
             press(k)
 
-    # Row 3
+    # Row 3: Enter - Z-M - Backspace
     keys3 = "ZXCVBNM"
-    c3 = st.columns([1.5] + [1]*7 + [1.5])
+    c3 = st.columns([1.5] + [1]*7 + [1.5]) 
     
+    # Enter Button
     if c3[0].button("ENTER", key="enter", use_container_width=True):
         press("ENTER")
         
     for idx, k in enumerate(keys3):
-        if c3[idx+1].button(k, key=f"btn_{k}", use_container_width=True):
+        if c3[idx+1].button(k, key=f"btn_{k}", use_container_width=True, disabled=k in absent_letters):
             press(k)
             
+    # Backspace Button
     if c3[8].button("⌫", key="back", use_container_width=True):
         press("⌫")
 
@@ -441,3 +357,4 @@ with tab2:
                     st.error("Word must be exactly 5 letters.")
     elif pwd:
         st.error("Incorrect Password")
+
