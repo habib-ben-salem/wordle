@@ -126,19 +126,48 @@ with tab1:
     
     if 'current_guess' not in st.session_state: st.session_state.current_guess = ""
     if 'guesses' not in st.session_state: st.session_state.guesses = []
-    
+    if 'game_over' not in st.session_state: st.session_state.game_over = False
+    if 'game_result' not in st.session_state: st.session_state.game_result = None
+
     # 1. RENDER THE GRID
     grid_html = '<div class="wordle-wrapper"><div class="grid">'
+    
     for r in range(6):
         grid_html += '<div class="row">'
+        
+        # Pre-calculate row status if it's a past guess to handle duplicate letters correctly
+        row_colors = ["empty"] * 5
+        if r < len(st.session_state.guesses):
+            guess_word = st.session_state.guesses[r]
+            
+            # 1. Mark Greens first
+            target_chars_count = {}
+            for char in target_word:
+                target_chars_count[char] = target_chars_count.get(char, 0) + 1
+            
+            # First pass: Greens
+            for c in range(5):
+                letter = guess_word[c]
+                if letter == target_word[c]:
+                    row_colors[c] = "correct"
+                    target_chars_count[letter] -= 1
+            
+            # Second pass: Yellows (only if count > 0)
+            for c in range(5):
+                letter = guess_word[c]
+                if row_colors[c] == "empty": # If not green
+                    if letter in target_chars_count and target_chars_count[letter] > 0:
+                        row_colors[c] = "present"
+                        target_chars_count[letter] -= 1
+                    else:
+                        row_colors[c] = "absent"
+
         for c in range(5):
             char, status = "", "empty"
             # Previous Guesses
             if r < len(st.session_state.guesses):
                 char = st.session_state.guesses[r][c]
-                if char == target_word[c]: status = "correct"
-                elif char in target_word: status = "present"
-                else: status = "absent"
+                status = row_colors[c]
             # Current Typing Row
             elif r == len(st.session_state.guesses) and c < len(st.session_state.current_guess):
                 char = st.session_state.current_guess[c]
@@ -149,13 +178,41 @@ with tab1:
     grid_html += '</div></div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
+    if st.session_state.game_over:
+        if st.session_state.game_result == "WIN":
+            st.success(f"🎉 You guessed it! The word was {target_word}")
+        else:
+            st.error(f"💀 Game Over! The word was {target_word}")
+        
+        if st.button("New Game"):
+            st.session_state.guesses = []
+            st.session_state.current_guess = ""
+            st.session_state.game_over = False
+            st.session_state.game_result = None
+            st.rerun()
+
     # 2. KEYBOARD LOGIC
     def press(key):
+        if st.session_state.game_over:
+            return
+
         if key == "ENTER":
             if len(st.session_state.current_guess) == 5:
-                st.session_state.guesses.append(st.session_state.current_guess)
-                st.session_state.current_guess = ""
-                st.rerun()
+                if st.session_state.current_guess in global_state["dictionary"]:
+                    st.session_state.guesses.append(st.session_state.current_guess)
+                    st.session_state.current_guess = ""
+                    
+                    # Check Win/Loss conditions immediately after guess
+                    if st.session_state.guesses[-1] == target_word:
+                        st.session_state.game_over = True
+                        st.session_state.game_result = "WIN"
+                    elif len(st.session_state.guesses) >= 6:
+                        st.session_state.game_over = True
+                        st.session_state.game_result = "LOSS"
+                    
+                    st.rerun()
+                else:
+                    st.toast("Not in word list", icon="❌") # Better than st.error inside column
         elif key == "⌫":
             st.session_state.current_guess = st.session_state.current_guess[:-1]
             st.rerun()
