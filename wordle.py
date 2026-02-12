@@ -2,208 +2,204 @@ import streamlit as st
 import random
 
 # --- CONFIGURATION & STATE ---
+@st.cache_resource
+def get_global_game_state():
+    return {
+        "current_word": "SURGE",
+        "dictionary": ["CRAWL", "STONE", "SPIRE", "FUNDS", "SURGE", "CLEAR", "BOARD", "LIGHT"],
+        "admin_password": "admin" 
+    }
+
+global_state = get_global_game_state()
+
 st.set_page_config(page_title="Global Wordle", layout="centered")
 
-@st.cache_resource
-def get_global_state():
-    return {
-        "target_word": "SURGE",
-        # A small dictionary for demonstration
-        "dictionary": ["CRAWL", "STONE", "SPIRE", "FUNDS", "SURGE", "CLEAR", "BOARD", "LIGHT", "POWER", "THINK"],
-        "admin_password": "admin"
-    }
-
-global_state = get_global_state()
-
-# Initialize session state
-if 'guesses' not in st.session_state:
-    st.session_state.guesses = []
-if 'current_guess' not in st.session_state:
-    st.session_state.current_guess = ""
-if 'game_over' not in st.session_state:
-    st.session_state.game_over = False
-# Track the state of each letter key: 'correct', 'present', 'absent', or None
-if 'key_states' not in st.session_state:
-    st.session_state.key_states = {}
-
-# --- CSS: THE CORE OF THE VISUAL RECREATION ---
+# --- CSS: THE ENGINE FOR THE VISUALS ---
 st.markdown("""
     <style>
-    /* Global Styles */
+    /* 1. MAIN BACKGROUND - Dark Charcoal */
     .stApp {
-        background-color: #121213; /* Dark charcoal background */
+        background-color: #121213;
         color: white;
-        font-family: 'Helvetica Neue', Arial, sans-serif;
     }
-    header, footer, [data-testid="stHeader"] { visibility: hidden; } # Hide Streamlit UI
+    
+    /* Hide Streamlit elements we don't need */
+    header, footer {visibility: hidden;}
+    
+    /* 2. THE GRID TILES */
+    .tile {
+        width: 62px;
+        height: 62px;
+        border: 2px solid #3a3a3c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        user-select: none;
+    }
+    
+    /* TILE COLORS */
+    .correct { background-color: #538d4e !important; border-color: #538d4e !important; }
+    .present { background-color: #b59f3b !important; border-color: #b59f3b !important; }
+    .absent  { background-color: #3a3a3c !important; border-color: #3a3a3c !important; }
+    .empty   { background-color: transparent; }
+    .typing  { border-color: #565758 !important; } /* Highlight current box */
 
-    /* Main Container to center everything */
-    .main-container {
+    /* 3. KEYBOARD BUTTON STYLING (The most important part) */
+    
+    /* Target ALL buttons inside the columns */
+    div.stButton > button {
+        background-color: #818384;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        height: 58px;          /* FORCE TALL KEYS */
+        width: 100%;           /* FILL THE COLUMN */
+        font-weight: bold;
+        font-size: 13px;
+        padding: 0;
+        margin: 0;
+        line-height: 58px;
+    }
+
+    /* Hover State */
+    div.stButton > button:hover {
+        background-color: #565758;
+        color: white;
+        border: none;
+    }
+    
+    /* Click/Active State */
+    div.stButton > button:active, div.stButton > button:focus {
+        background-color: #565758;
+        color: white;
+        border: none;
+        box-shadow: none;
+    }
+
+    /* 4. LAYOUT TIGHTENING (Removing the Gaps) */
+    
+    /* Squeeze the columns together */
+    [data-testid="stHorizontalBlock"] {
+        gap: 6px !important; /* Matches strict 6px gap from Wordle */
+        align-items: center;
+    }
+    
+    /* Remove padding inside columns */
+    [data-testid="column"] {
+        padding: 0px !important;
+        min-width: 0px !important;
+        flex: 1;
+    }
+    
+    /* Center the Grid Wrapper */
+    .wordle-wrapper {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start;
-        padding-top: 20px;
+        justify-content: center;
+        margin-bottom: 30px;
     }
-
-    /* --- GRID STYLES --- */
     .grid {
         display: grid;
         grid-template-rows: repeat(6, 1fr);
-        gap: 5px; /* Precise gap between tiles */
-        margin-bottom: 30px;
+        gap: 5px;
     }
     .row {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
         gap: 5px;
     }
-    .tile {
-        width: 62px;
-        height: 62px;
-        border: 2px solid #3a3a3c; /* Dark grey border for empty */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        font-weight: bold;
-        text-transform: uppercase;
-        user-select: none;
-    }
-    /* Tile Color States */
-    .correct { background-color: #538d4e !important; border: none !important; }
-    .present { background-color: #b59f3b !important; border: none !important; }
-    .absent { background-color: #3a3a3c !important; border: none !important; }
-    .typing { border-color: #818384 !important; } /* Lighter border when typing */
-
-    /* --- KEYBOARD STYLES --- */
-    /* Override Streamlit button styles to look like keys */
-    div.stButton > button {
-        background-color: #818384; /* Default key color */
-        color: white;
-        border: none;
-        border-radius: 4px; /* Rounded corners */
-        height: 58px; /* Fixed height for all keys */
-        width: 100%;
-        font-weight: bold;
-        font-size: 14px;
-        padding: 0;
-        margin: 0;
-        line-height: 58px;
-    }
-    div.stButton > button:hover { background-color: #565758; }
-    div.stButton > button:active, div.stButton > button:focus {
-        background-color: #565758;
-        box-shadow: none;
-        border: none;
-    }
-
-    /* Dynamic Key Colors based on game state */
-    .key-correct div.stButton > button { background-color: #538d4e !important; }
-    .key-present div.stButton > button { background-color: #b59f3b !important; }
-    .key-absent div.stButton > button { background-color: #3a3a3c !important; }
-
-    /* Layout Tweaks for Keyboard Rows */
-    [data-testid="stHorizontalBlock"] {
-        gap: 6px !important; /* Exact gap between keys */
-        justify-content: center;
-    }
-    /* Ensure columns don't add extra padding */
-    [data-testid="column"] {
-        padding: 0 !important;
-        min-width: 0 !important;
-    }
     </style>
 """, unsafe_allow_html=True)
 
-# --- GAME LOGIC ---
-def update_key_states(guess):
-    target = global_state["target_word"]
-    for i, char in enumerate(guess):
-        if char == target[i]:
-            st.session_state.key_states[char] = 'correct'
-        elif char in target:
-            # Only mark as present if it's not already marked as correct
-            if st.session_state.key_states.get(char) != 'correct':
-                st.session_state.key_states[char] = 'present'
-        else:
-            # Only mark as absent if it has no other status
-            if char not in st.session_state.key_states:
-                st.session_state.key_states[char] = 'absent'
+# --- APP LOGIC ---
+st.title("🌎 Global Wordle")
 
-def handle_press(key):
-    if st.session_state.game_over: return
+tab1, tab2 = st.tabs(["🎮 Play Game", "🔒 Admin Panel"])
 
-    if key == "ENTER":
-        if len(st.session_state.current_guess) == 5:
-            guess = st.session_state.current_guess
-            st.session_state.guesses.append(guess)
-            update_key_states(guess)
-            st.session_state.current_guess = ""
-            if guess == global_state["target_word"] or len(st.session_state.guesses) == 6:
-                st.session_state.game_over = True
-    elif key == "⌫":
-        st.session_state.current_guess = st.session_state.current_guess[:-1]
-    elif len(st.session_state.current_guess) < 5:
-        st.session_state.current_guess += key
-    st.rerun()
+with tab1:
+    target_word = global_state["current_word"]
+    
+    if 'current_guess' not in st.session_state: st.session_state.current_guess = ""
+    if 'guesses' not in st.session_state: st.session_state.guesses = []
+    
+    # 1. RENDER THE GRID
+    grid_html = '<div class="wordle-wrapper"><div class="grid">'
+    for r in range(6):
+        grid_html += '<div class="row">'
+        for c in range(5):
+            char, status = "", "empty"
+            # Previous Guesses
+            if r < len(st.session_state.guesses):
+                char = st.session_state.guesses[r][c]
+                if char == target_word[c]: status = "correct"
+                elif char in target_word: status = "present"
+                else: status = "absent"
+            # Current Typing Row
+            elif r == len(st.session_state.guesses) and c < len(st.session_state.current_guess):
+                char = st.session_state.current_guess[c]
+                status = "typing"
+            
+            grid_html += f'<div class="tile {status}">{char}</div>'
+        grid_html += '</div>'
+    grid_html += '</div></div>'
+    st.markdown(grid_html, unsafe_allow_html=True)
 
-# --- MAIN APP LAYOUT ---
-st.markdown('<div class="main-container">', unsafe_allow_html=True)
+    # 2. KEYBOARD LOGIC
+    def press(key):
+        if key == "ENTER":
+            if len(st.session_state.current_guess) == 5:
+                st.session_state.guesses.append(st.session_state.current_guess)
+                st.session_state.current_guess = ""
+                st.rerun()
+        elif key == "⌫":
+            st.session_state.current_guess = st.session_state.current_guess[:-1]
+            st.rerun()
+        elif len(st.session_state.current_guess) < 5:
+            st.session_state.current_guess += key
+            st.rerun()
 
-# 1. RENDER THE GRID (Using HTML/CSS for precision)
-grid_html = '<div class="grid">'
-for r in range(6):
-    grid_html += '<div class="row">'
-    for c in range(5):
-        char = ""
-        status = ""
-        # Completed guesses
-        if r < len(st.session_state.guesses):
-            char = st.session_state.guesses[r][c]
-            if char == global_state["target_word"][c]: status = "correct"
-            elif char in global_state["target_word"]: status = "present"
-            else: status = "absent"
-        # Current typing row
-        elif r == len(st.session_state.guesses) and c < len(st.session_state.current_guess):
-            char = st.session_state.current_guess[c]
-            status = "typing"
+    # 3. RENDER KEYBOARD (Precise Columns)
+    
+    # Row 1: Q-P (10 Keys) - Standard spacing
+    keys1 = "QWERTYUIOP"
+    c1 = st.columns(10)
+    for idx, k in enumerate(keys1):
+        if c1[idx].button(k, key=f"btn_{k}", use_container_width=True):
+            press(k)
+
+    # Row 2: A-L (9 Keys) - Centered with Spacers
+    keys2 = "ASDFGHJKL"
+    # [0.5 spacer] [1] [1] ... [0.5 spacer]
+    c2 = st.columns([0.5] + [1]*9 + [0.5]) 
+    for idx, k in enumerate(keys2):
+        if c2[idx+1].button(k, key=f"btn_{k}", use_container_width=True):
+            press(k)
+
+    # Row 3: Enter - Z-M - Backspace
+    keys3 = "ZXCVBNM"
+    # Enter is 1.5x, Letters are 1x, Backspace is 1.5x
+    c3 = st.columns([1.5] + [1]*7 + [1.5])
+    
+    if c3[0].button("ENTER", key="enter", use_container_width=True):
+        press("ENTER")
         
-        grid_html += f'<div class="tile {status}">{char}</div>'
-    grid_html += '</div>'
-grid_html += '</div>'
-st.markdown(grid_html, unsafe_allow_html=True)
+    for idx, k in enumerate(keys3):
+        if c3[idx+1].button(k, key=f"btn_{k}", use_container_width=True):
+            press(k)
+            
+    if c3[8].button("⌫", key="back", use_container_width=True):
+        press("⌫")
 
-# 2. RENDER THE KEYBOARD (Using st.columns with custom CSS classes)
-rows = [
-    "QWERTYUIOP",
-    "ASDFGHJKL",
-    ["ENTER"] + list("ZXCVBNM") + ["⌫"]
-]
-
-for i, row_keys in enumerate(rows):
-    # Define column ratios for precise layout
-    if i == 0: # Q-P
-        cols = st.columns(10)
-    elif i == 1: # A-L (Centered with spacers)
-        cols = st.columns([0.5] + [1]*9 + [0.5])
-        row_keys = [""] + list(row_keys) + [""] # Add dummy keys for spacers
-    else: # Enter-M-Back
-        cols = st.columns([1.5] + [1]*7 + [1.5]) # Wider outer keys
-
-    for j, key_char in enumerate(row_keys):
-        if key_char == "": continue # Skip spacers
-
-        # Determine key style based on game state
-        key_style = ""
-        state = st.session_state.key_states.get(key_char)
-        if state: key_style = f"key-{state}"
-        
-        # Use a container to apply the color style to the button inside
-        with cols[j]:
-            st.markdown(f'<div class="{key_style}">', unsafe_allow_html=True)
-            if st.button(key_char, key=f"btn_{i}_{j}"):
-                handle_press(key_char)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True) # End main-container
+with tab2:
+    pwd = st.text_input("Admin Password", type="password")
+    if pwd == global_state["admin_password"]:
+        if st.button("🚀 New Word"):
+            global_state["current_word"] = random.choice(global_state["dictionary"]).upper()
+            st.session_state.guesses = []
+            st.rerun()
+        st.info(f"Current Word: {global_state['current_word']}")
