@@ -167,6 +167,19 @@ tab1, tab2 = st.tabs(["🎮 Play Game", "🔒 Admin Panel"])
 with tab1:
     target_word = global_state["current_word"]
     
+    # Check if the global word has changed since our last session state. 
+    # If so, reset the game for this user.
+    if 'last_target_word' not in st.session_state:
+        st.session_state.last_target_word = target_word
+        
+    if st.session_state.last_target_word != target_word:
+        st.session_state.guesses = []
+        st.session_state.current_guess = ""
+        st.session_state.game_over = False
+        st.session_state.game_result = None
+        st.session_state.last_target_word = target_word
+        st.rerun()
+    
     if 'current_guess' not in st.session_state: st.session_state.current_guess = ""
     if 'guesses' not in st.session_state: st.session_state.guesses = []
     if 'game_over' not in st.session_state: st.session_state.game_over = False
@@ -253,12 +266,7 @@ with tab1:
         else:
             st.error(f"💀 Game Over! The word was {target_word}")
         
-        if st.button("New Game"):
-            st.session_state.guesses = []
-            st.session_state.current_guess = ""
-            st.session_state.game_over = False
-            st.session_state.game_result = None
-            st.rerun()
+        # No New Game button here. Game resets when admin changes word or reloads.
 
     # 2. KEYBOARD LOGIC
     def press(key):
@@ -323,7 +331,7 @@ with tab1:
     if c3[8].button("⌫", key="back", use_container_width=True):
         press("⌫")
 
-    # JavaScript to style keyboard keys based on game state
+    # JavaScript to style keyboard keys based on game state and handle physical keyboard input
     js = f"""
     <script>
         const absent = {list(absent_letters)};
@@ -333,6 +341,7 @@ with tab1:
         const doc = window.parent.document;
         const buttons = doc.querySelectorAll('div.stButton > button');
         
+        // 1. Color the keys
         buttons.forEach(btn => {{
             const key = btn.innerText;
             if (correct.includes(key)) {{
@@ -349,6 +358,29 @@ with tab1:
                 btn.style.border = '1px solid #333';
             }}
         }});
+
+        // 2. Attach Physical Keyboard Listener (A-Z, Enter, Backspace)
+        if (!doc._wordle_listener_attached) {{
+            doc.addEventListener('keydown', function(e) {{
+                // Ignore if typing in an input field (like Admin password)
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                
+                let key = e.key.toUpperCase();
+                if (e.key === 'Enter') key = 'ENTER';
+                if (e.key === 'Backspace') key = '⌫';
+                
+                // Find the button with the matching text
+                // We re-query buttons here to ensure we get valid DOM elements
+                const allButtons = Array.from(doc.querySelectorAll('button'));
+                const targetBtn = allButtons.find(btn => btn.innerText === key);
+                
+                if (targetBtn) {{
+                    targetBtn.click();
+                    e.preventDefault();
+                }}
+            }});
+            doc._wordle_listener_attached = true;
+        }}
     </script>
     """
     components.html(js, height=0, width=0)
