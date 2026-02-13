@@ -333,9 +333,9 @@ with tab1:
         elif len(st.session_state.current_guess) < 5:
             st.session_state.current_guess += key
             st.rerun()
-        """else:
+        #else:
              # Look & Feel: If they try to type > 5 chars
-             st.toast("Word is full! Press ENTER or Backspace.")"""
+             #st.toast("Word is full! Press ENTER or Backspace.")
 
     # 3. RENDER KEYBOARD (Precise Columns)
     
