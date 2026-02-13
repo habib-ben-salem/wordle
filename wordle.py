@@ -135,7 +135,7 @@ st.markdown("""
     /* 5. CENTERED NOTIFICATION OVERLAY */
     .centered-notification {
         position: fixed;
-        top: 15%;
+        top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
         background-color: #333;
@@ -147,7 +147,19 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         border: 2px solid #555;
         text-align: center;
+        padding: 15px 25px;
+        border-radius: 8px;
+        font-weight: bold;
+        z-index: 99999;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        border: 2px solid #555;
+        text-align: center;
         animation: fadeOut 2.5s forwards;
+    }
+    
+    /* Spacer between grid and keyboard */
+    .keyboard-spacer {
+        height: 20px;
     }
     
     @keyframes fadeOut {
@@ -258,13 +270,25 @@ with tab1:
         # Clear notification after one render
         st.session_state.notification = None
 
+    # Container for Grid + Notification Area (to ensure spacing)
+    # The notification is now absolutely positioned relative to this wrapper or fixed on screen but lower
+    
     st.markdown(grid_html, unsafe_allow_html=True)
+    
+    # Placeholder for messages below grid to push keyboard down
+    if 'notification' in st.session_state and st.session_state.notification:
+         # We already rendered it above, but let's add a visual spacer if needed or let CSS handle it
+         pass
+         
+    st.markdown('<div class="keyboard-spacer"></div>', unsafe_allow_html=True)
 
     if st.session_state.game_over:
         if st.session_state.game_result == "WIN":
             st.success(f"🎉 You guessed it! The word was {target_word}")
         else:
             st.error(f"💀 Game Over! The word was {target_word}")
+        
+    st.write("") # Spacer between grid/game-over and keyboard
         
         # No New Game button here. Game resets when admin changes word or reloads.
 
