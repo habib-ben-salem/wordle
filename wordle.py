@@ -135,18 +135,9 @@ st.markdown("""
     /* 5. CENTERED NOTIFICATION OVERLAY */
     .centered-notification {
         position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        display: none; /* Hide the old class just in case */
         background-color: #333;
         color: #fff;
-        padding: 15px 25px;
-        border-radius: 8px;
-        font-weight: bold;
-        z-index: 99999;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        border: 2px solid #555;
-        text-align: center;
         padding: 15px 25px;
         border-radius: 8px;
         font-weight: bold;
@@ -157,10 +148,29 @@ st.markdown("""
         animation: fadeOut 2.5s forwards;
     }
     
-    /* Spacer between grid and keyboard */
-    .keyboard-spacer {
-        height: 20px;
+    /* 5. DEDICATED STATUS BAR (Between Grid and Keyboard) */
+    .status-bar-wrapper {
+        height: 60px; /* Fixed height to preserve layout */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 10px 0;
     }
+    
+    .status-bar {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        color: white;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    
+    .status-win { background-color: #538d4e; border: 2px solid #538d4e; }
+    .status-loss { background-color: #cf6679; border: 2px solid #cf6679; } /* Red for loss */
+    .status-error { background-color: #cf6679; border: 2px solid #cf6679; } /* Red for invalid */
     
     @keyframes fadeOut {
         0% { opacity: 1; margin-top: 0px; }
@@ -265,32 +275,32 @@ with tab1:
     present_letters = present_letters - correct_letters
 
     # Show Notification if present
-    if 'notification' in st.session_state and st.session_state.notification:
-        st.markdown(f'<div class="centered-notification">{st.session_state.notification}</div>', unsafe_allow_html=True)
-        # Clear notification after one render
-        st.session_state.notification = None
-
-    # Container for Grid + Notification Area (to ensure spacing)
-    # The notification is now absolutely positioned relative to this wrapper or fixed on screen but lower
-    
     st.markdown(grid_html, unsafe_allow_html=True)
-    
-    # Placeholder for messages below grid to push keyboard down
-    if 'notification' in st.session_state and st.session_state.notification:
-         # We already rendered it above, but let's add a visual spacer if needed or let CSS handle it
-         pass
-         
-    st.markdown('<div class="keyboard-spacer"></div>', unsafe_allow_html=True)
 
+    # --- DEDICATED STATUS BAR ---
+    # Determine the message and style based on game state
+    status_msg = ""
+    status_class = ""
+    
     if st.session_state.game_over:
         if st.session_state.game_result == "WIN":
-            st.success(f"🎉 You guessed it! The word was {target_word}")
+            status_msg = f"🎉 You guessed it! The word was {target_word}"
+            status_class = "status-win"
         else:
-            st.error(f"💀 Game Over! The word was {target_word}")
+            status_msg = f"💀 Game Over! The word was {target_word}"
+            status_class = "status-loss"
+    elif 'notification' in st.session_state and st.session_state.notification:
+        status_msg = st.session_state.notification
+        status_class = "status-error"
+        st.session_state.notification = None # Clear after render
         
-    st.write("") # Spacer between grid/game-over and keyboard
+    # Render the status bar (invisible if empty)
+    if status_msg:
+        st.markdown(f'<div class="status-bar-wrapper"><div class="status-bar {status_class}">{status_msg}</div></div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="status-bar-wrapper"></div>', unsafe_allow_html=True)
         
-        # No New Game button here. Game resets when admin changes word or reloads.
+    # No New Game button here. Game resets when admin changes word or reloads.
 
     # 2. KEYBOARD LOGIC
     def press(key):
