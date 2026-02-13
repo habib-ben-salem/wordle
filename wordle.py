@@ -305,6 +305,7 @@ with tab1:
     # 2. KEYBOARD LOGIC
     def press(key):
         if st.session_state.game_over:
+            st.toast("Game is over! Wait for admin to change word.")
             return
 
         if key == "ENTER":
@@ -332,6 +333,9 @@ with tab1:
         elif len(st.session_state.current_guess) < 5:
             st.session_state.current_guess += key
             st.rerun()
+        else:
+             # Look & Feel: If they try to type > 5 chars
+             st.toast("Word is full! Press ENTER or Backspace.")
 
     # 3. RENDER KEYBOARD (Precise Columns)
     
@@ -377,7 +381,7 @@ with tab1:
         
         // 1. Color the keys
         buttons.forEach(btn => {{
-            const key = btn.innerText;
+            const key = btn.innerText.trim(); // Trim whitespace
             if (correct.includes(key)) {{
                 btn.style.backgroundColor = '#538d4e'; // Green
                 btn.style.color = 'white';
@@ -390,31 +394,41 @@ with tab1:
                 btn.style.backgroundColor = '#3b3b3b'; // Gray
                 btn.style.color = '#777';
                 btn.style.border = '1px solid #333';
+            }} else {{
+                // Reset to default state if not in any list (e.g. on new game)
+                // Default styling from CSS
+                btn.style.backgroundColor = '#818384'; 
+                btn.style.color = 'white';
+                btn.style.border = 'none';
             }}
         }});
 
         // 2. Attach Physical Keyboard Listener (A-Z, Enter, Backspace)
-        if (!doc._wordle_listener_attached) {{
-            doc.addEventListener('keydown', function(e) {{
-                // Ignore if typing in an input field (like Admin password)
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-                
-                let key = e.key.toUpperCase();
-                if (e.key === 'Enter') key = 'ENTER';
-                if (e.key === 'Backspace') key = '⌫';
-                
-                // Find the button with the matching text
-                // We re-query buttons here to ensure we get valid DOM elements
-                const allButtons = Array.from(doc.querySelectorAll('button'));
-                const targetBtn = allButtons.find(btn => btn.innerText === key);
-                
-                if (targetBtn) {{
-                    targetBtn.click();
-                    e.preventDefault();
-                }}
-            }});
-            doc._wordle_listener_attached = true;
+        // Use a global function name to avoid duplicate listeners on re-runs
+        if (window.parent.wordleKeyListener) {{
+            doc.removeEventListener('keydown', window.parent.wordleKeyListener);
         }}
+        
+        window.parent.wordleKeyListener = function(e) {{
+            // Ignore if typing in an input field
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            let key = e.key.toUpperCase();
+            if (e.key === 'Enter') key = 'ENTER';
+            if (e.key === 'Backspace') key = '⌫';
+            
+            // Find the button with the matching text
+            // We search specifically in stButton containers to avoid other buttons
+            const allButtons = Array.from(doc.querySelectorAll('div.stButton > button'));
+            const targetBtn = allButtons.find(btn => btn.innerText.trim() === key);
+            
+            if (targetBtn) {{
+                targetBtn.click();
+                e.preventDefault();
+            }}
+        }};
+        
+        doc.addEventListener('keydown', window.parent.wordleKeyListener);
     </script>
     """
     components.html(js, height=0, width=0)
@@ -458,11 +472,19 @@ with tab2:
                 if len(custom_word) == 5 and custom_word.isalpha():
                     global_state["current_word"] = custom_word
                     st.session_state.guesses = []
+                    st.session_state.current_guess = ""
                     st.session_state.game_over = False
                     st.session_state.game_result = None
                     st.toast(f"Word updated to: {custom_word}")
                     st.rerun()
                 else:
                     st.error("Word must be exactly 5 letters.")
+                    
+        st.markdown("---")
+        if st.button("⚠️ Force Reset Game State (Debug)", type="primary"):
+            for key in ['guesses', 'current_guess', 'game_over', 'game_result', 'last_target_word']:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.rerun()
     elif pwd:
         st.error("Incorrect Password")
