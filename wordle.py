@@ -116,21 +116,27 @@ st.markdown("""
     
     /* Center the Grid Wrapper */
     .wordle-wrapper {
-        display: flex;
+        display: flex !important;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         margin-bottom: 30px;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
     }
     .grid {
-        display: grid;
+        display: grid !important;
         grid-template-rows: repeat(6, 1fr);
         gap: 5px;
+        width: fit-content;
+        margin: 0 auto;
     }
     .row {
-        display: grid;
+        display: grid !important;
         grid-template-columns: repeat(5, 1fr);
         gap: 5px;
+        width: fit-content;
     }
     
     /* 5. CENTERED NOTIFICATION OVERLAY */
