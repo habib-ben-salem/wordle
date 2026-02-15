@@ -255,6 +255,18 @@ st.markdown("""
             height: 35px !important;
             font-size: 16px !important;
         }
+
+            /* Force keyboard columns to shrink on mobile */
+            [data-testid="stHorizontalBlock"] > div {
+                flex-basis: 0 !important;
+                min-width: 0 !important;
+                max-width: 1fr !important;
+            }
+            .wordle-wrapper, .grid, .row {
+                max-width: 100vw !important;
+                width: 100vw !important;
+                overflow-x: hidden !important;
+            }
     }
     </style>
 
