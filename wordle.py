@@ -183,15 +183,14 @@ st.markdown("""
         /* Force columns to stay horizontal on mobile */
         [data-testid="stHorizontalBlock"] {
             flex-wrap: nowrap !important;
-            overflow-x: auto;
             gap: 3px !important; /* Reduce gap on mobile for better fit */
         }
         
         /* Adjust button size for mobile */
         div.stButton > button {
-            height: 48px !important; /* Slightly shorter buttons on mobile */
+            height: 48px !important; /* Maintain good touch target height */
             font-size: 11px !important; /* Smaller font */
-            min-width: 28px; /* Minimum width to prevent too-narrow buttons */
+            min-width: 30px; /* Minimum width for touch targets */
         }
         
         /* Adjust tile size for mobile */
@@ -209,9 +208,9 @@ st.markdown("""
         }
         
         div.stButton > button {
-            height: 42px !important;
+            height: 44px !important; /* Meet minimum touch target height */
             font-size: 10px !important;
-            min-width: 24px;
+            min-width: 26px; /* Balance between accessibility and fitting all keys */
             padding: 0 2px;
         }
         
