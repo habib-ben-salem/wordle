@@ -441,7 +441,7 @@ with tab1:
                     st.rerun()
                 else:
                     # Show centered notification
-                    st.session_state.notification = "⛔ English Yazbi! Not in dictionary"
+                    st.session_state.notification = "⛔ English Only! Not in dictionary"
                     st.rerun()
         elif key == "⌫":
             st.session_state.current_guess = st.session_state.current_guess[:-1]
