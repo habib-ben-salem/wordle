@@ -1,4 +1,4 @@
-import streamlit as st
+it as st
 import streamlit.components.v1 as components
 import random
 
@@ -18,7 +18,6 @@ st.set_page_config(page_title="Global Wordle", layout="centered")
 
 # --- CSS: THE ENGINE FOR THE VISUALS ---
 st.markdown("""
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
     /* 1. MAIN BACKGROUND - Dark Charcoal */
     .stApp {
@@ -178,134 +177,6 @@ st.markdown("""
         70% { opacity: 1; margin-top: 0px; }
         100% { opacity: 0; margin-top: -20px; visibility: hidden; }
     }
-    
-        /* 6. MOBILE RESPONSIVE STYLES */
-        /* Prevent Streamlit columns from stacking on mobile for the keyboard */
-        @media only screen and (max-width: 768px) {
-            [data-testid="stHorizontalBlock"] {
-                flex-wrap: nowrap !important;
-                display: flex !important;
-                flex-direction: row !important;
-                overflow-x: auto;
-            }
-            [data-testid="column"] {
-                min-width: 0 !important;
-                flex: 1 1 0 !important;
-            }
-        }
-    @media only screen and (max-width: 768px) {
-        /* Reduce tile size for mobile */
-        .tile {
-            width: 50px;
-            height: 50px;
-            font-size: 24px;
-        }
-        
-        /* Reduce grid gaps */
-        .grid {
-            gap: 4px;
-        }
-        .row {
-            gap: 4px;
-        }
-        
-        /* Adjust keyboard button size for mobile */
-        div.stButton > button {
-            height: 48px;
-            font-size: 11px;
-            line-height: 48px;
-            border-radius: 3px;
-        }
-        
-        /* Tighter gaps between keyboard keys */
-        [data-testid="stHorizontalBlock"] {
-            gap: 4px !important;
-        }
-        
-        /* Reduce status bar size */
-        .status-bar {
-            padding: 8px 15px;
-            font-size: 14px;
-            max-width: 90%;
-        }
-        
-        .status-bar-wrapper {
-            height: 50px;
-            margin: 8px 0;
-        }
-        
-        /* Adjust wrapper margins */
-        .wordle-wrapper {
-            margin-bottom: 20px;
-        }
-    }
-    
-    /* Extra small devices (phones in portrait, less than 480px) */
-    @media only screen and (max-width: 480px) {
-        /* Further reduce tile size */
-        .tile {
-            width: 45px;
-            height: 45px;
-            font-size: 20px;
-            border: 1.5px solid #3a3a3c;
-        }
-        
-        /* Smaller keyboard buttons */
-        div.stButton > button {
-            height: 42px;
-            font-size: 10px;
-            line-height: 42px;
-        }
-        
-        /* Even tighter gaps */
-        [data-testid="stHorizontalBlock"] {
-            gap: 3px !important;
-        }
-        
-        .grid {
-            gap: 3px;
-        }
-        .row {
-            gap: 3px;
-        }
-        
-        /* Compact status bar */
-        .status-bar {
-            padding: 6px 12px;
-            font-size: 13px;
-        }
-        
-        .status-bar-wrapper {
-            height: 45px;
-            margin: 6px 0;
-        }
-    }
-    
-    /* Very small devices (less than 360px) */
-    @media only screen and (max-width: 360px) {
-        .tile {
-            width: 40px;
-            height: 40px;
-            font-size: 18px;
-        }
-        
-        div.stButton > button {
-            height: 38px;
-            font-size: 9px;
-            line-height: 38px;
-        }
-        
-        [data-testid="stHorizontalBlock"] {
-            gap: 2px !important;
-        }
-        
-        .grid {
-            gap: 2px;
-        }
-        .row {
-            gap: 2px;
-        }
-    }
     </style>
 
 """, unsafe_allow_html=True)
@@ -454,7 +325,7 @@ with tab1:
                     st.rerun()
                 else:
                     # Show centered notification
-                    st.session_state.notification = "⛔ English Yazbi! Not in dictionary"
+                    st.session_state.notification = "⛔ English Only! Not in dictionary"
                     st.rerun()
         elif key == "⌫":
             st.session_state.current_guess = st.session_state.current_guess[:-1]
