@@ -225,6 +225,7 @@ st.markdown("""
             height: 48px !important; /* Maintain good touch target height */
             font-size: 11px !important; /* Smaller font */
             min-width: 30px; /* Minimum width for touch targets */
+            max-width: 45px !important; /* Prevent buttons from becoming too wide on tablets */
         }
         
         /* Adjust tile size for mobile */
@@ -245,6 +246,7 @@ st.markdown("""
             height: 44px !important; /* Meet minimum touch target height */
             font-size: 10px !important;
             min-width: 26px; /* Balance between accessibility and fitting all keys */
+            max-width: 32px !important; /* Prevent buttons from becoming too wide */
             padding: 0 2px;
         }
         
