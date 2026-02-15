@@ -177,6 +177,50 @@ st.markdown("""
         70% { opacity: 1; margin-top: 0px; }
         100% { opacity: 0; margin-top: -20px; visibility: hidden; }
     }
+    
+    /* 6. MOBILE RESPONSIVE FIXES - Prevent keyboard from stacking */
+    @media only screen and (max-width: 768px) {
+        /* Force columns to stay horizontal on mobile */
+        [data-testid="stHorizontalBlock"] {
+            flex-wrap: nowrap !important;
+            overflow-x: auto;
+            gap: 3px !important; /* Reduce gap on mobile for better fit */
+        }
+        
+        /* Adjust button size for mobile */
+        div.stButton > button {
+            height: 48px !important; /* Slightly shorter buttons on mobile */
+            font-size: 11px !important; /* Smaller font */
+            min-width: 28px; /* Minimum width to prevent too-narrow buttons */
+        }
+        
+        /* Adjust tile size for mobile */
+        .tile {
+            width: 50px !important;
+            height: 50px !important;
+            font-size: 24px !important;
+        }
+    }
+    
+    /* Extra small screens (phones in portrait) */
+    @media only screen and (max-width: 480px) {
+        [data-testid="stHorizontalBlock"] {
+            gap: 2px !important; /* Even tighter gap for very small screens */
+        }
+        
+        div.stButton > button {
+            height: 42px !important;
+            font-size: 10px !important;
+            min-width: 24px;
+            padding: 0 2px;
+        }
+        
+        .tile {
+            width: 45px !important;
+            height: 45px !important;
+            font-size: 20px !important;
+        }
+    }
     </style>
 
 """, unsafe_allow_html=True)
