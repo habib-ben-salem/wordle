@@ -22,6 +22,18 @@ import streamlit.components.v1 as components  # For custom HTML/JS components
 import random  # For random word selection
 
 # ============================================================================
+# MOBILE PORTRAIT MODE KEYBOARD CONFIGURATION
+# ============================================================================
+# These variables control the keyboard appearance in portrait mode on mobile devices
+# (screens with max-width: 480px)
+MOBILE_PORTRAIT_KEY_GAP = "2px"           # Space between keyboard keys
+MOBILE_PORTRAIT_KEY_HEIGHT = "44px"       # Height of keyboard keys
+MOBILE_PORTRAIT_KEY_MIN_WIDTH = "26px"    # Minimum width of keyboard keys
+MOBILE_PORTRAIT_KEY_MAX_WIDTH = "32px"    # Maximum width of keyboard keys
+MOBILE_PORTRAIT_KEY_FONT_SIZE = "10px"    # Font size of keyboard keys
+MOBILE_PORTRAIT_KEY_PADDING = "0 2px"     # Padding inside keyboard keys
+
+# ============================================================================
 # GLOBAL CONFIGURATION & STATE MANAGEMENT
 # ============================================================================
 @st.cache_resource
@@ -51,19 +63,19 @@ global_state = get_global_game_state()
 st.set_page_config(page_title="Global Wordle", layout="centered")
 
 # --- CSS: THE ENGINE FOR THE VISUALS ---
-st.markdown("""
+st.markdown(f"""
     <style>
     /* 1. MAIN BACKGROUND - Dark Charcoal */
-    .stApp {
+    .stApp {{
         background-color: #121213;
         color: white;
-    }
+    }}
     
     /* Hide Streamlit elements we don't need */
-    header, footer {visibility: hidden;}
+    header, footer {{visibility: hidden;}}
     
     /* 2. THE GRID TILES */
-    .tile {
+    .tile {{
         width: 62px;
         height: 62px;
         border: 2px solid #3a3a3c;
@@ -75,19 +87,19 @@ st.markdown("""
         text-transform: uppercase;
         font-family: 'Helvetica Neue', Arial, sans-serif;
         user-select: none;
-    }
+    }}
     
     /* TILE COLORS */
-    .correct { background-color: #538d4e !important; border-color: #538d4e !important; }
-    .present { background-color: #b59f3b !important; border-color: #b59f3b !important; }
-    .absent  { background-color: #3a3a3c !important; border-color: #3a3a3c !important; }
-    .empty   { background-color: transparent; }
-    .typing  { border-color: #565758 !important; } /* Highlight current box */
+    .correct {{ background-color: #538d4e !important; border-color: #538d4e !important; }}
+    .present {{ background-color: #b59f3b !important; border-color: #b59f3b !important; }}
+    .absent  {{ background-color: #3a3a3c !important; border-color: #3a3a3c !important; }}
+    .empty   {{ background-color: transparent; }}
+    .typing  {{ border-color: #565758 !important; }} /* Highlight current box */
 
     /* 3. KEYBOARD BUTTON STYLING (The most important part) */
     
     /* Target ALL buttons inside the columns */
-    div.stButton > button {
+    div.stButton > button {{
         background-color: #818384;
         color: white;
         border: none;
@@ -99,75 +111,75 @@ st.markdown("""
         padding: 0;
         margin: 0;
         line-height: 58px;
-    }
+    }}
 
     /* Disabled/Absent Key Styling */
-    div.stButton > button:disabled {
+    div.stButton > button:disabled {{
         background-color: #3b3b3b !important;
         color: #777 !important;
         border: 1px solid #333 !important;
         opacity: 1 !important;
         cursor: not-allowed;
-    }
+    }}
 
     /* Hover State */
-    div.stButton > button:hover {
+    div.stButton > button:hover {{
         background-color: #565758;
         color: white;
         border: none;
-    }
+    }}
     
     /* Click/Active State */
-    div.stButton > button:active, div.stButton > button:focus {
+    div.stButton > button:active, div.stButton > button:focus {{
         background-color: #565758;
         color: white;
         border: none;
         box-shadow: none;
-    }
+    }}
 
     /* Absent/Wrong Letter Key Styling */
-    div.stButton > button.absent-key {
+    div.stButton > button.absent-key {{
         background-color: #3b3b3b !important;
         color: #777 !important;
         border: 1px solid #333 !important;
-    }
+    }}
 
     /* 4. LAYOUT TIGHTENING (Removing the Gaps) */
     
     /* Squeeze the columns together */
-    [data-testid="stHorizontalBlock"] {
+    [data-testid="stHorizontalBlock"] {{
         gap: 6px !important; /* Matches strict 6px gap from Wordle */
         align-items: center;
-    }
+    }}
     
     /* Remove padding inside columns */
-    [data-testid="column"] {
+    [data-testid="column"] {{
         padding: 0px !important;
         min-width: 0px !important;
         flex: 1;
-    }
+    }}
     
     /* Center the Grid Wrapper */
-    .wordle-wrapper {
+    .wordle-wrapper {{
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         margin-bottom: 30px;
-    }
-    .grid {
+    }}
+    .grid {{
         display: grid;
         grid-template-rows: repeat(6, 1fr);
         gap: 5px;
-    }
-    .row {
+    }}
+    .row {{
         display: grid;
         grid-template-columns: repeat(5, 1fr);
         gap: 5px;
-    }
+    }}
     
     /* 5. CENTERED NOTIFICATION OVERLAY */
-    .centered-notification {
+    .centered-notification {{
         position: fixed;
         display: none; /* Hide the old class just in case */
         background-color: #333;
@@ -180,18 +192,18 @@ st.markdown("""
         border: 2px solid #555;
         text-align: center;
         animation: fadeOut 2.5s forwards;
-    }
+    }}
     
     /* 5. DEDICATED STATUS BAR (Between Grid and Keyboard) */
-    .status-bar-wrapper {
+    .status-bar-wrapper {{
         height: 60px; /* Fixed height to preserve layout */
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 10px 0;
-    }
+    }}
     
-    .status-bar {
+    .status-bar {{
         padding: 10px 20px;
         border-radius: 8px;
         font-weight: bold;
@@ -200,62 +212,62 @@ st.markdown("""
         max-width: 400px;
         text-align: center;
         box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    }
+    }}
     
-    .status-win { background-color: #538d4e; border: 2px solid #538d4e; }
-    .status-loss { background-color: #cf6679; border: 2px solid #cf6679; } /* Red for loss */
-    .status-error { background-color: #cf6679; border: 2px solid #cf6679; } /* Red for invalid */
+    .status-win {{ background-color: #538d4e; border: 2px solid #538d4e; }}
+    .status-loss {{ background-color: #cf6679; border: 2px solid #cf6679; }} /* Red for loss */
+    .status-error {{ background-color: #cf6679; border: 2px solid #cf6679; }} /* Red for invalid */
     
-    @keyframes fadeOut {
-        0% { opacity: 1; margin-top: 0px; }
-        70% { opacity: 1; margin-top: 0px; }
-        100% { opacity: 0; margin-top: -20px; visibility: hidden; }
-    }
+    @keyframes fadeOut {{
+        0% {{ opacity: 1; margin-top: 0px; }}
+        70% {{ opacity: 1; margin-top: 0px; }}
+        100% {{ opacity: 0; margin-top: -20px; visibility: hidden; }}
+    }}
     
     /* 6. MOBILE RESPONSIVE FIXES - Prevent keyboard from stacking */
-    @media only screen and (max-width: 768px) {
+    @media only screen and (max-width: 768px) {{
         /* Force columns to stay horizontal on mobile */
-        [data-testid="stHorizontalBlock"] {
+        [data-testid="stHorizontalBlock"] {{
             flex-wrap: nowrap !important;
             gap: 3px !important; /* Reduce gap on mobile for better fit */
-        }
+        }}
         
         /* Adjust button size for mobile */
-        div.stButton > button {
+        div.stButton > button {{
             height: 48px !important; /* Maintain good touch target height */
             font-size: 11px !important; /* Smaller font */
             min-width: 30px; /* Minimum width for touch targets */
             max-width: 45px !important; /* Prevent buttons from becoming too wide on tablets */
-        }
+        }}
         
         /* Adjust tile size for mobile */
-        .tile {
+        .tile {{
             width: 42px !important;
             height: 42px !important;
             font-size: 20px !important;
-        }
-    }
+        }}
+    }}
     
     /* Extra small screens (phones in portrait) */
-    @media only screen and (max-width: 480px) {
-        [data-testid="stHorizontalBlock"] {
-            gap: 2px !important; /* Even tighter gap for very small screens */
-        }
+    @media only screen and (max-width: 480px) {{
+        [data-testid="stHorizontalBlock"] {{
+            gap: {MOBILE_PORTRAIT_KEY_GAP} !important; /* Even tighter gap for very small screens */
+        }}
         
-        div.stButton > button {
-            height: 44px !important; /* Meet minimum touch target height */
-            font-size: 10px !important;
-            min-width: 26px; /* Balance between accessibility and fitting all keys */
-            max-width: 32px !important; /* Prevent buttons from becoming too wide */
-            padding: 0 2px;
-        }
+        div.stButton > button {{
+            height: {MOBILE_PORTRAIT_KEY_HEIGHT} !important; /* Meet minimum touch target height */
+            font-size: {MOBILE_PORTRAIT_KEY_FONT_SIZE} !important;
+            min-width: {MOBILE_PORTRAIT_KEY_MIN_WIDTH}; /* Balance between accessibility and fitting all keys */
+            max-width: {MOBILE_PORTRAIT_KEY_MAX_WIDTH} !important; /* Prevent buttons from becoming too wide */
+            padding: {MOBILE_PORTRAIT_KEY_PADDING};
+        }}
         
-        .tile {
+        .tile {{
             width: 35px !important;
             height: 35px !important;
             font-size: 16px !important;
-        }
-    }
+        }}
+    }}
     </style>
 
 """, unsafe_allow_html=True)
