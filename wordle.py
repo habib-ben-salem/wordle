@@ -243,17 +243,28 @@ st.markdown("""
         }
         
         div.stButton > button {
-            height: 44px !important; /* Meet minimum touch target height */
+            height: 40px !important;
             font-size: 10px !important;
-            min-width: 26px; /* Balance between accessibility and fitting all keys */
-            max-width: 32px !important; /* Prevent buttons from becoming too wide */
-            padding: 0 2px;
+            min-width: 20px;
+            max-width: 24px !important;
+            padding: 0 1px;
         }
-        
         .tile {
-            width: 35px !important;
-            height: 35px !important;
-            font-size: 16px !important;
+            width: 24px !important;
+            height: 24px !important;
+            font-size: 13px !important;
+            margin: 0 1px !important;
+        }
+        .row {
+            gap: 1px !important;
+        }
+        .grid {
+            gap: 1px !important;
+        }
+        .wordle-wrapper, .grid, .row {
+            max-width: 100vw !important;
+            width: 100vw !important;
+            overflow-x: hidden !important;
         }
 
             /* Force keyboard columns to shrink on mobile */
@@ -444,18 +455,15 @@ with tab1:
         if c2[idx+1].button(k, key=f"btn_{k}", use_container_width=True):
             press(k)
 
-    # Row 3: Enter - Z-M - Backspace
+    # Row 3: Validate (checkmark) - Z-M - Backspace
     keys3 = "ZXCVBNM"
-    c3 = st.columns([1.5] + [1]*7 + [1.5]) 
-    
-    # Enter Button
-    if c3[0].button("ENTER", key="enter", use_container_width=True):
+    c3 = st.columns([1.2] + [1]*7 + [1.2]) 
+    # Validate Button (Checkmark)
+    if c3[0].button("✅", key="enter", use_container_width=True):
         press("ENTER")
-        
     for idx, k in enumerate(keys3):
         if c3[idx+1].button(k, key=f"btn_{k}", use_container_width=True):
             press(k)
-            
     # Backspace Button
     if c3[8].button("⌫", key="back", use_container_width=True):
         press("⌫")
@@ -469,30 +477,28 @@ with tab1:
         
         const doc = window.parent.document;
         const buttons = doc.querySelectorAll('div.stButton > button');
-        
         // 1. Color the keys
-        buttons.forEach(btn => {{
-            const key = btn.innerText.trim(); // Trim whitespace
-            if (correct.includes(key)) {{
-                btn.style.backgroundColor = '#538d4e'; // Green
+        buttons.forEach(btn => {
+            let key = btn.innerText.trim();
+            if (key === '✅') key = 'ENTER';
+            if (correct.includes(key)) {
+                btn.style.backgroundColor = '#538d4e';
                 btn.style.color = 'white';
                 btn.style.border = 'none';
-            }} else if (present.includes(key)) {{
-                btn.style.backgroundColor = '#b59f3b'; // Yellow
+            } else if (present.includes(key)) {
+                btn.style.backgroundColor = '#b59f3b';
                 btn.style.color = 'white';
                 btn.style.border = 'none';
-            }} else if (absent.includes(key)) {{
-                btn.style.backgroundColor = '#3b3b3b'; // Gray
+            } else if (absent.includes(key)) {
+                btn.style.backgroundColor = '#3b3b3b';
                 btn.style.color = '#777';
                 btn.style.border = '1px solid #333';
-            }} else {{
-                // Reset to default state if not in any list (e.g. on new game)
-                // Default styling from CSS
-                btn.style.backgroundColor = '#818384'; 
+            } else {
+                btn.style.backgroundColor = '#818384';
                 btn.style.color = 'white';
                 btn.style.border = 'none';
-            }}
-        }});
+            }
+        });
 
         // 2. Attach Physical Keyboard Listener (A-Z, Enter, Backspace)
         // Use a global function name to avoid duplicate listeners on re-runs
@@ -505,7 +511,7 @@ with tab1:
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
             
             let key = e.key.toUpperCase();
-            if (e.key === 'Enter') key = 'ENTER';
+            if (e.key === 'Enter') key = '✅';
             if (e.key === 'Backspace') key = '⌫';
             
             // Find the button with the matching text
