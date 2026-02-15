@@ -195,9 +195,9 @@ st.markdown("""
         
         /* Adjust tile size for mobile */
         .tile {
-            width: 50px !important;
-            height: 50px !important;
-            font-size: 24px !important;
+            width: 42px !important;
+            height: 42px !important;
+            font-size: 20px !important;
         }
     }
     
@@ -215,9 +215,9 @@ st.markdown("""
         }
         
         .tile {
-            width: 45px !important;
-            height: 45px !important;
-            font-size: 20px !important;
+            width: 35px !important;
+            height: 35px !important;
+            font-size: 16px !important;
         }
     }
     </style>
