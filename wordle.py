@@ -2,66 +2,16 @@
 Wordle Game Application
 ========================
 A multiplayer Wordle game built with Streamlit.
-    js = f"""
-<script>
-    const absent = {list(absent_letters)};
-    const correct = {list(correct_letters)};
-    const present = {list(present_letters)};
-    const doc = window.parent.document;
-    const buttons = doc.querySelectorAll('div.stButton > button');
-    // 1. Color the keys
-    buttons.forEach(btn => {{
-        let key = btn.innerText.trim();
-        if (key === '✅') key = 'ENTER';
-        if (correct.includes(key)) {{
-            btn.style.backgroundColor = '#538d4e';
-            btn.style.color = 'white';
-            btn.style.border = 'none';
-        }} else if (present.includes(key)) {{
-            btn.style.backgroundColor = '#b59f3b';
-            btn.style.color = 'white';
-            btn.style.border = 'none';
-        }} else if (absent.includes(key)) {{
-            btn.style.backgroundColor = '#3b3b3b';
-            btn.style.color = '#777';
-            btn.style.border = '1px solid #333';
-        }} else {{
-            btn.style.backgroundColor = '#818384';
-            btn.style.color = 'white';
-            btn.style.border = 'none';
-        }}
-    }});
-    // 2. Attach Physical Keyboard Listener (A-Z, Enter, Backspace)
-    // Use a global function name to avoid duplicate listeners on re-runs
-    if (window.parent.wordleKeyListener) {{
-        doc.removeEventListener('keydown', window.parent.wordleKeyListener);
-    }}
-    window.parent.wordleKeyListener = function(e) {{
-        // Ignore if typing in an input field
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-        let key = e.key.toUpperCase();
-        if (e.key === 'Enter') key = '✅';
-        if (e.key === 'Backspace') key = '⌫';
-        // Find the button with the matching text
-        // We search specifically in stButton containers to avoid other buttons
-        const allButtons = Array.from(doc.querySelectorAll('div.stButton > button'));
-        const targetBtn = allButtons.find(btn => btn.innerText.trim() === key);
-        if (targetBtn) {{
-            targetBtn.click();
-            e.preventDefault();
-        }}
-    }};
-    doc.addEventListener('keydown', window.parent.wordleKeyListener);
-</script>
-"""
-    components.html(js, height=0, width=0)
+
+import streamlit as st
+    st.markdown("""
+<style>
+    body {
         background-color: #121213;
         color: white;
     }
-    
     /* Hide Streamlit elements we don't need */
     header, footer {visibility: hidden;}
-    
     /* 2. THE GRID TILES */
     .tile {
         width: 62px;
@@ -76,32 +26,26 @@ A multiplayer Wordle game built with Streamlit.
         font-family: 'Helvetica Neue', Arial, sans-serif;
         user-select: none;
     }
-    
     /* TILE COLORS */
     .correct { background-color: #538d4e !important; border-color: #538d4e !important; }
     .present { background-color: #b59f3b !important; border-color: #b59f3b !important; }
     .absent  { background-color: #3a3a3c !important; border-color: #3a3a3c !important; }
     .empty   { background-color: transparent; }
-    .typing  { border-color: #565758 !important; } /* Highlight current box */
-
+    .typing  { border-color: #565758 !important; }
     /* 3. KEYBOARD BUTTON STYLING (The most important part) */
-    
-    /* Target ALL buttons inside the columns */
     div.stButton > button {
         background-color: #818384;
         color: white;
         border: none;
         border-radius: 4px;
-        height: 58px;          /* FORCE TALL KEYS */
-        width: 100%;           /* FILL THE COLUMN */
+        height: 58px;
+        width: 100%;
         font-weight: bold;
         font-size: 13px;
         padding: 0;
         margin: 0;
         line-height: 58px;
     }
-
-    /* Disabled/Absent Key Styling */
     div.stButton > button:disabled {
         background-color: #3b3b3b !important;
         color: #777 !important;
@@ -109,45 +53,31 @@ A multiplayer Wordle game built with Streamlit.
         opacity: 1 !important;
         cursor: not-allowed;
     }
-
-    /* Hover State */
     div.stButton > button:hover {
         background-color: #565758;
         color: white;
         border: none;
     }
-    
-    /* Click/Active State */
     div.stButton > button:active, div.stButton > button:focus {
         background-color: #565758;
         color: white;
         border: none;
         box-shadow: none;
     }
-
-    /* Absent/Wrong Letter Key Styling */
     div.stButton > button.absent-key {
         background-color: #3b3b3b !important;
         color: #777 !important;
         border: 1px solid #333 !important;
     }
-
-    /* 4. LAYOUT TIGHTENING (Removing the Gaps) */
-    
-    /* Squeeze the columns together */
     [data-testid="stHorizontalBlock"] {
-        gap: 6px !important; /* Matches strict 6px gap from Wordle */
+        gap: 6px !important;
         align-items: center;
     }
-    
-    /* Remove padding inside columns */
     [data-testid="column"] {
         padding: 0px !important;
         min-width: 0px !important;
         flex: 1;
     }
-    
-    /* Center the Grid Wrapper */
     .wordle-wrapper {
         display: flex;
         flex-direction: column;
@@ -165,11 +95,9 @@ A multiplayer Wordle game built with Streamlit.
         grid-template-columns: repeat(5, 1fr);
         gap: 5px;
     }
-    
-    /* 5. CENTERED NOTIFICATION OVERLAY */
     .centered-notification {
         position: fixed;
-        display: none; /* Hide the old class just in case */
+        display: none;
         background-color: #333;
         color: #fff;
         padding: 15px 25px;
@@ -181,16 +109,13 @@ A multiplayer Wordle game built with Streamlit.
         text-align: center;
         animation: fadeOut 2.5s forwards;
     }
-    
-    /* 5. DEDICATED STATUS BAR (Between Grid and Keyboard) */
     .status-bar-wrapper {
-        height: 60px; /* Fixed height to preserve layout */
+        height: 60px;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 10px 0;
     }
-    
     .status-bar {
         padding: 10px 20px;
         border-radius: 8px;
@@ -201,47 +126,35 @@ A multiplayer Wordle game built with Streamlit.
         text-align: center;
         box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
-    
     .status-win { background-color: #538d4e; border: 2px solid #538d4e; }
-    .status-loss { background-color: #cf6679; border: 2px solid #cf6679; } /* Red for loss */
-    .status-error { background-color: #cf6679; border: 2px solid #cf6679; } /* Red for invalid */
-    
+    .status-loss { background-color: #cf6679; border: 2px solid #cf6679; }
+    .status-error { background-color: #cf6679; border: 2px solid #cf6679; }
     @keyframes fadeOut {
         0% { opacity: 1; margin-top: 0px; }
         70% { opacity: 1; margin-top: 0px; }
         100% { opacity: 0; margin-top: -20px; visibility: hidden; }
     }
-    
-    /* 6. MOBILE RESPONSIVE FIXES - Prevent keyboard from stacking */
     @media only screen and (max-width: 768px) {
-        /* Force columns to stay horizontal on mobile */
         [data-testid="stHorizontalBlock"] {
             flex-wrap: nowrap !important;
-            gap: 3px !important; /* Reduce gap on mobile for better fit */
+            gap: 3px !important;
         }
-        
-        /* Adjust button size for mobile */
         div.stButton > button {
-            height: 48px !important; /* Maintain good touch target height */
-            font-size: 11px !important; /* Smaller font */
-            min-width: 30px; /* Minimum width for touch targets */
-            max-width: 45px !important; /* Prevent buttons from becoming too wide on tablets */
+            height: 48px !important;
+            font-size: 11px !important;
+            min-width: 30px;
+            max-width: 45px !important;
         }
-        
-        /* Adjust tile size for mobile */
         .tile {
             width: 42px !important;
             height: 42px !important;
             font-size: 20px !important;
         }
     }
-    
-    /* Extra small screens (phones in portrait) */
     @media only screen and (max-width: 480px) {
         [data-testid="stHorizontalBlock"] {
-            gap: 2px !important; /* Even tighter gap for very small screens */
+            gap: 2px !important;
         }
-        
         div.stButton > button {
             height: 40px !important;
             font-size: 10px !important;
@@ -266,21 +179,18 @@ A multiplayer Wordle game built with Streamlit.
             width: 100vw !important;
             overflow-x: hidden !important;
         }
-
-            /* Force keyboard columns to shrink on mobile */
-            [data-testid="stHorizontalBlock"] > div {
-                flex-basis: 0 !important;
-                min-width: 0 !important;
-                max-width: 1fr !important;
-            }
-            .wordle-wrapper, .grid, .row {
-                max-width: 100vw !important;
-                width: 100vw !important;
-                overflow-x: hidden !important;
-            }
+        [data-testid="stHorizontalBlock"] > div {
+            flex-basis: 0 !important;
+            min-width: 0 !important;
+            max-width: 1fr !important;
+        }
+        .wordle-wrapper, .grid, .row {
+            max-width: 100vw !important;
+            width: 100vw !important;
+            overflow-x: hidden !important;
+        }
     }
-    </style>
-
+</style>
 """, unsafe_allow_html=True)
 
 # --- APP LOGIC ---
